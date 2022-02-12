@@ -1,49 +1,52 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
+from os.path import join
+from colorfield.fields import ColorField
+from django.db.models.enums import Choices
+
+
+from task_scheduler.task_scheduler.settings import MEDIA_ROOT
+
+TIMEOUTS = {"S": "Small", "M": "Medium", "L": "Large"}
 
 
 class User(AbstractUser):
     pass
 
+
 class Shop(models.Model):
-    name = models.CharField(max_length=200, verbose_name='Название магазина')
-    adress = models.CharField(max_length=200, verbose_name='Адрес магазина')
+    name = models.CharField(max_length=200, verbose_name="Название магазина")
+    adress = models.CharField(max_length=200, verbose_name="Адрес магазина")
 
     def __str__(self):
         return self.name
 
 
 class Product(models.Model):
-    name = models.CharField(max_length=200, verbose_name='Название продукта')
-    measurement_unit = models.CharField(
-        max_length=200, verbose_name='Единица измерения')
-    image = models.ImageField(upload_to='product/', blank=True, null=True)
-    text = models.TextField(verbose_name='Описание продукта')
-    category = models.CharField(max_length=200, verbose_name='Категория продукта')
-    adding_date = models.DateField(verbose_name='Дата добавления',auto_now_add=True, db_index=True)
-    shop = models.ForeignKey(
-        Shop, on_delete=models.CASCADE, verbose_name="Магазин", related_name="products")
-    
+    name = models.CharField(max_length=200, verbose_name="Название продукта")
+    measurement_unit = models.CharField(max_length=200, verbose_name="Единица измерения")
+    image = models.ImageField(upload_to=join(MEDIA_ROOT, "product/"), blank=True, null=True)
+    text = models.TextField(verbose_name="Описание продукта")
+    category = models.CharField(max_length=200, verbose_name="Категория продукта")
+    adding_date = models.DateField(verbose_name="Дата добавления", auto_now_add=True, db_index=True)
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, verbose_name="Магазин", related_name="products")
+
     def __str__(self):
-        return '{}, {}'.format(self.name, self.measurement_unit)
+        return "{}, {}".format(self.name, self.measurement_unit)
 
 
 class Recipe(models.Model):
-    author = (models.ForeignKey(
-        User, on_delete=models.CASCADE,
-        related_name="recipes", verbose_name='Автор'))
-    products = models.ManyToManyField(
-        Product, through='ProductRecipe')
-    name = models.CharField(max_length=200, verbose_name='Название рецепта')
-    image = models.ImageField(upload_to='recipes/', blank=True, null=True)
-    video = models.FileField(upload_to='video/', null=True, blank=True)
-    text = models.TextField(verbose_name='Текст рецепта')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recipes", verbose_name="Автор")
+    products = models.ManyToManyField(Product, through="ProductRecipe")
+    name = models.CharField(max_length=200, verbose_name="Название рецепта")
+    image = models.ImageField(upload_to=join(MEDIA_ROOT, "recipes/"), blank=True, null=True)
+    video = models.FileField(upload_to=join(MEDIA_ROOT, "video/"), null=True, blank=True)
+    text = models.TextField(verbose_name="Текст рецепта")
     cooking_time = models.PositiveSmallIntegerField(
-        validators=(MinValueValidator(1), MaxValueValidator(240)),
-        verbose_name='Время приготовления')
-    pub_date = models.DateField(
-        verbose_name='Дата публикации', auto_now_add=True, db_index=True)
+        validators=(MinValueValidator(1), MaxValueValidator(240)), verbose_name="Время приготовления"
+    )
+    pub_date = models.DateField(verbose_name="Дата публикации", auto_now_add=True, db_index=True)
 
     class Meta:
         ordering = ["-id"]
@@ -51,34 +54,69 @@ class Recipe(models.Model):
     def __str__(self):
         return self.name
 
+
 class ProductPurchase(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='Продукт')    
-    amount = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Количество')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name="Продукт")
+    amount = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Количество")
 
     def __str__(self):
         return self.product.name
 
 
 class ShoppingCart(models.Model):
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE,
-        verbose_name="Покупатель", related_name="shopping_cart")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Покупатель", related_name="shopping_cart")
     recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE,
-        verbose_name="Список рецептов", related_name="shopping_cart")
+        Recipe, on_delete=models.CASCADE, verbose_name="Список рецептов", related_name="shopping_cart"
+    )
     products = models.ForeignKey(
-        ProductPurchase, on_delete=models.CASCADE,
-        verbose_name="Список продуктов", related_name="shopping_cart")
-    
+        ProductPurchase, on_delete=models.CASCADE, verbose_name="Список продуктов", related_name="shopping_cart"
+    )
+
     def __str__(self):
-        return '{}, {}'.format(self.recipe.name, self.product.name)
-        
+        return "{}, {}".format(self.recipe.name, self.product.name)
+
 
 class ProductRecipe(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='Продукт')
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='related_products',
-        verbose_name='Рецепт')
-    amount = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Количество')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name="Продукт")
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="related_products", verbose_name="Рецепт")
+    amount = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Количество")
 
     def __str__(self):
         return self.product.name
+
+
+class SchedulerType(models.Model):
+    title = models.CharField(verbose_name="Тип задачи", max_length=50, unique=True)
+    description = models.TextField(verbose_name="Описание типа задачи", max_length=300, blank=True)
+    has_subtask = models.BooleanField(default=False)
+    color = ColorField(default="#FFFFFF", unique=True)
+
+    def __str__(self):
+        return self.title
+
+
+class MainTaskScheduler(models.Model):
+    title = models.CharField(verbose_name="Название задачи", max_length=50)
+    description = models.TextField(verbose_name="Краткое описание задачи", max_length=500, blank=True)
+    duration = models.DurationField(verbose_name="Ожидаемое время выполнения", blank=True)
+    when = models.DateTimeField(blank=True)
+    importance = models.IntegerChoices(choices=range(6), default=0)
+    scheduler_type = models.ForeignKey(SchedulerType, blank=True, related_name="Scheduler")
+    image = models.ImageField(blank=True, upload_to=join(MEDIA_ROOT, "scheduler_image/"))
+    video = models.FileField(upload_to=join(MEDIA_ROOT, "scheduler_video/"), blank=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="scheduler", verbose_name="Автор")
+
+    def __str__(self):
+        return "{}, {}, {}".format(self.title, self.duration, self.when)
+
+
+class Training(models.Model):
+    title = models.CharField(max_length=50, unique=True, verbose_name="Название упражнения")
+    duration = models.DurationField(verbose_name="Продолжительность", blank=True)
+    count = models.PositiveIntegerField(max_length=3, blank=True)
+    timeout = models.ChoiceField(choices=TIMEOUTS, default="S")
+    image = models.ImageField(blank=True, upload_to=join(MEDIA_ROOT, "training_image/"))
+    video = models.FileField(upload_to=join(MEDIA_ROOT, "training_video/"), blank=True)
+
+    def __str__(self):
+        return "{}, {}, {}".format(self.title, self.duration, self.count)
