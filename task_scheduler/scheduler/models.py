@@ -3,7 +3,6 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from os.path import join
 from colorfield.fields import ColorField
-from django.db.models.enums import Choices
 
 
 from task_scheduler.task_scheduler.settings import MEDIA_ROOT
