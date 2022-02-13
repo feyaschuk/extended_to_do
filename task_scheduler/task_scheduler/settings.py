@@ -1,4 +1,5 @@
 from os.path import abspath, dirname, join
+from datetime import timedelta
 
 BASE_DIR = dirname(dirname(abspath(__file__)))
 
@@ -9,7 +10,7 @@ SECRET_KEY = "django-insecure-ov1a$=iu!5pjox3^0f_m@c^8+2h2++0nd7$0lhz0tj^c+c3xis
 DEBUG = True
 
 ALLOWED_HOSTS = []
-AUTH_USER_MODEL = "scheduler.User"
+AUTH_USER_MODEL = "users.User"
 
 # Application definition
 
@@ -20,7 +21,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "colorfield",
     "scheduler",
+    "users.apps.UsersConfig",
+    'rest_framework',
+    'djoser',
 ]
 
 MIDDLEWARE = [
@@ -60,7 +65,7 @@ WSGI_APPLICATION = "task_scheduler.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": join(BASE_DIR, "db.sqlite3"),
     }
 }
 
@@ -106,3 +111,34 @@ MEDIA_ROOT = join(BASE_DIR, "back_media/")
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
+
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ]
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+DJOSER = {
+    'LOGIN_FIELD': 'email',
+
+    'SERIALIZERS': {
+        'user_create': 'users.serializers.CustomUserCreateSerializer',
+        'user': 'users.serializers.CustomUserSerializer',
+        'current_user': 'users.serializers.CustomUserSerializer',
+    },
+
+    'PERMISSIONS': {
+        'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
+        'user_list': ['rest_framework.permissions.AllowAny'],
+    },
+    'HIDE_USERS': False,
+}

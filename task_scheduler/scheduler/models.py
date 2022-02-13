@@ -1,3 +1,4 @@
+from tkinter import CASCADE
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -5,13 +6,8 @@ from os.path import join
 from colorfield.fields import ColorField
 
 
-from task_scheduler.task_scheduler.settings import MEDIA_ROOT
-
-TIMEOUTS = {"S": "Small", "M": "Medium", "L": "Large"}
-
-
-class User(AbstractUser):
-    pass
+from task_scheduler.settings import MEDIA_ROOT
+from users.models import User
 
 
 class Shop(models.Model):
@@ -95,12 +91,21 @@ class SchedulerType(models.Model):
 
 
 class MainTaskScheduler(models.Model):
+
+    class Suit(models.IntegerChoices):
+        ONE = 1
+        TWO = 2
+        THREE = 3
+        FOUR = 4
+        FIVE = 5
+        SIX = 6
+
     title = models.CharField(verbose_name="Название задачи", max_length=50)
     description = models.TextField(verbose_name="Краткое описание задачи", max_length=500, blank=True)
     duration = models.DurationField(verbose_name="Ожидаемое время выполнения", blank=True)
     when = models.DateTimeField(blank=True)
-    importance = models.IntegerChoices(choices=range(6), default=0)
-    scheduler_type = models.ForeignKey(SchedulerType, blank=True, related_name="Scheduler")
+    importance = models.IntegerField(choices=Suit.choices, default=0)
+    scheduler_type = models.ForeignKey(SchedulerType, blank=True, related_name="Scheduler", on_delete=models.CASCADE)
     image = models.ImageField(blank=True, upload_to=join(MEDIA_ROOT, "scheduler_image/"))
     video = models.FileField(upload_to=join(MEDIA_ROOT, "scheduler_video/"), blank=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="scheduler", verbose_name="Автор")
@@ -110,10 +115,18 @@ class MainTaskScheduler(models.Model):
 
 
 class Training(models.Model):
+    SMALL = 'S'
+    MEDIUM = 'M'
+    LARGE = 'L'
+    TIMEOUTS = [
+        (SMALL, 'Small'),
+        (MEDIUM, 'Medium'),
+        (LARGE, 'Large'),
+    ]
     title = models.CharField(max_length=50, unique=True, verbose_name="Название упражнения")
     duration = models.DurationField(verbose_name="Продолжительность", blank=True)
-    count = models.PositiveIntegerField(max_length=3, blank=True)
-    timeout = models.ChoiceField(choices=TIMEOUTS, default="S")
+    count = models.PositiveIntegerField(blank=True)
+    timeout = models.CharField(max_length=1, choices=TIMEOUTS, default="S")
     image = models.ImageField(blank=True, upload_to=join(MEDIA_ROOT, "training_image/"))
     video = models.FileField(upload_to=join(MEDIA_ROOT, "training_video/"), blank=True)
 
