@@ -1,0 +1,9 @@
+asgiref==3.5.0
+Django==4.0.2
+Pillow==9.0.1
+sqlparse==0.4.2
+tzdata==2021.5
+djangorestframework==3.12.4
+djoser
+djangorestframework-simplejwt==4.7.2
+django-colorfield
