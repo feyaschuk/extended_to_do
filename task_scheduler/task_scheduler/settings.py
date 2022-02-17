@@ -1,5 +1,7 @@
 from os.path import abspath, dirname, join
 from datetime import timedelta
+#import os
+
 
 BASE_DIR = dirname(dirname(abspath(__file__)))
 
@@ -104,7 +106,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
-STATIC_URL = join(BASE_DIR, "back_static/")
+# STATIC_URL = join(BASE_DIR, "back_static/")
+# MEDIA_ROOT = join(BASE_DIR, "back_media/")
+
+STATIC_URL = '/back_static/'
+STATIC_ROOT = join(BASE_DIR, 'back_static/')
+MEDIA_URL = "/back_media/"
 MEDIA_ROOT = join(BASE_DIR, "back_media/")
 
 # Default primary key field type
@@ -114,7 +121,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+        'rest_framework.permissions.AllowAny',
     ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': [

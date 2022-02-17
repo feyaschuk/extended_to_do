@@ -13,20 +13,24 @@ from users.models import User
 class Shop(models.Model):
     name = models.CharField(max_length=200, verbose_name="Название магазина")
     adress = models.CharField(max_length=200, verbose_name="Адрес магазина")
-
+    
     def __str__(self):
         return self.name
 
-
 class Product(models.Model):
+    class Category(models.TextChoices):
+        GROCERY = 'grocery'
+        HOUSEHOLD = 'household'
+
     name = models.CharField(max_length=200, verbose_name="Название продукта")
     measurement_unit = models.CharField(max_length=200, verbose_name="Единица измерения")
     image = models.ImageField(upload_to=join(MEDIA_ROOT, "product/"), blank=True, null=True)
     text = models.TextField(verbose_name="Описание продукта")
-    category = models.CharField(max_length=200, verbose_name="Категория продукта")
+    category = models.CharField(max_length=200, choices=Category.choices, default=0, verbose_name="Категория продукта")
     adding_date = models.DateField(verbose_name="Дата добавления", auto_now_add=True, db_index=True)
+    #shop = models.ManyToManyField(Shop, through="Shop")
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE, verbose_name="Магазин", related_name="products")
-
+    
     def __str__(self):
         return "{}, {}".format(self.name, self.measurement_unit)
 
@@ -61,14 +65,14 @@ class ProductPurchase(models.Model):
 class ShoppingCart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Покупатель", related_name="shopping_cart")
     recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE, verbose_name="Список рецептов", related_name="shopping_cart"
-    )
+        Recipe, on_delete=models.CASCADE, verbose_name="Список рецептов", related_name="shopping_cart",
+        null=True, blank=True)
     products = models.ForeignKey(
-        ProductPurchase, on_delete=models.CASCADE, verbose_name="Список продуктов", related_name="shopping_cart"
-    )
+        ProductPurchase, on_delete=models.CASCADE, verbose_name="Список продуктов", related_name="shopping_cart",
+        null=True, blank=True )
 
     def __str__(self):
-        return "{}, {}".format(self.recipe.name, self.product.name)
+        return "Список покупок " + self.user.username
 
 
 class ProductRecipe(models.Model):
