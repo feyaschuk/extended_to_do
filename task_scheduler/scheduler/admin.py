@@ -11,7 +11,6 @@ class RecipeAdmin(admin.ModelAdmin):
     inlines = (RecipeProductInline,)
 
 admin.site.register(Recipe, RecipeAdmin)
-
 app_config = apps.get_app_config('scheduler')
 models = app_config.get_models()
 for model in models:

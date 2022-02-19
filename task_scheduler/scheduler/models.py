@@ -54,34 +54,61 @@ class Recipe(models.Model):
         return self.name
 
 
-class ProductPurchase(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name="Продукт")
-    amount = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Количество")
-
-    def __str__(self):
-        return self.product.name
-
-
-class ShoppingCart(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Покупатель", related_name="shopping_cart")
+class Purchase(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='purchases',
+        verbose_name='Покупатель'
+    )
     recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE, verbose_name="Список рецептов", related_name="shopping_cart",
-        null=True, blank=True)
-    products = models.ForeignKey(
-        ProductPurchase, on_delete=models.CASCADE, verbose_name="Список продуктов", related_name="shopping_cart",
-        null=True, blank=True )
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='purchases',
+        verbose_name='Рецепт'
+    )
+    date_added = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата добавления',
+    )
+
+    class Meta:
+        ordering = ('-date_added',)
+        verbose_name = 'покупку'
+        verbose_name_plural = 'покупки'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'], name='purchase_user_recipe_unique'
+            )
+        ]
 
     def __str__(self):
-        return "Список покупок " + self.user.username
+        return f'Рецепт "{self.recipe}" в списке покупок {self.user}'
 
 
 class ProductRecipe(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name="Продукт")
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="related_products", verbose_name="Рецепт")
-    amount = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Количество")
+    product = models.ForeignKey(Product,
+                                   on_delete=models.CASCADE,
+                                   related_name='ingr_amount',
+                                   verbose_name='Ингредиент')
+    recipe = models.ForeignKey(Recipe,
+                               on_delete=models.CASCADE,
+                               related_name='ingr_amount',
+                               verbose_name='Рецепт')
+    amount = models.PositiveIntegerField(
+        validators=[MinValueValidator(1, message='Не менее 1')],
+        verbose_name='Количество ингредиента'
+    )
 
+    class Meta:        
+        constraints = [
+            models.UniqueConstraint(
+                fields=['product', 'recipe'],
+                name='recipe_product_unique'
+            )
+        ]
     def __str__(self):
-        return self.product.name
+        return f'Ингридиент "{self.product}" рецепта "{self.recipe}".'
 
 
 class SchedulerType(models.Model):
