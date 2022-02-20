@@ -1,3 +1,4 @@
+from asyncore import read
 from itertools import product
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
@@ -57,7 +58,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     products = ProductRecipeSerializer(many=True,
                                                   read_only=True,
-                                                  source='ingr_amount')
+                                                  source='amount')
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = Base64ImageField()
 
@@ -155,12 +156,12 @@ class RecipeSerializer(serializers.ModelSerializer):
                 amount = product.get('amount')
                 if not amount:
                     amount = 0
-                ingr_amount = ProductRecipe.objects.create(
+                amount = ProductRecipe.objects.create(
                     recipe=recipe,
                     product_id=product.get('id'),
                     amount=amount
                 )
-                ingr_amount.save()
+                amount.save()
     
     def update(self, instance, validated_data):
         attrs = {
@@ -209,31 +210,26 @@ class PurchaseSerializer(serializers.ModelSerializer):
 class ProductPurchaseSerializer(serializers.ModelSerializer):    
     product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-
+    
     class Meta:
         model = ProductPurchase
-        fields = ('user', 'product')
+        fields = ('user', 'product', 'amount')
 
     def validate(self, data):
         request = self.context.get('request')              
         product_id = data['product'].id
-        print(product_id)
+
         if self.Meta.model is ProductPurchase:          
             answer = 'списке покупок'
         if (
-            self.Meta.model.objects
-            .select_related('product')
+            ProductPurchase.objects            
             .filter(user=request.user, product__id=product_id)
             .exists()
         ):
             raise serializers.ValidationError(f'Продукт уже есть в {answer}')
         return data
 
-    def to_representation(self, instance):
-        request = self.context.get('request')
-        context = {'request': request}
-        return RecipeShortSerializer(instance.product, context=context).data
-
+    
 
 
 

@@ -1,5 +1,6 @@
 import csv
 from itertools import product
+from wsgiref import validate
 from django.shortcuts import render
 from rest_framework import viewsets
 from scheduler.models import *
@@ -12,9 +13,11 @@ from rest_framework import filters, permissions, status, viewsets
 from django.db.models import Sum, Count
 from django.db.models import F
 
+
 class ShopViewSet(viewsets.ModelViewSet):
     queryset = Shop.objects.all()
     serializer_class = ShopSerializer
+
 
     
 class ProductViewSet(viewsets.ModelViewSet):
@@ -33,15 +36,42 @@ class ProductViewSet(viewsets.ModelViewSet):
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk=None):
         return self.alt_endpoint_delete(request, pk, cart=True)
-
     
+    @action(['get'], detail=False)                         
+    def download_shopping_cart(self, request):
+        
+        single_products = (
+            ProductPurchase.objects
+            .filter(user=request.user)
+            .values_list('product__name', 'product__measurement_unit')
+            .annotate(amount=Sum('amount'))
+        )     
+        products = (
+            ProductRecipe.objects
+            .select_related('product', 'recipe')
+            .prefetch_related('purchases')
+            .filter(recipe__purchases__user=request.user)
+            .values_list('product__name', 'product__measurement_unit')
+            .annotate(amount=Sum('amount'))
+        )
+        full_list =products.union(single_products)
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = ('attachment;'
+                                           'filename="Shopping_list.csv"')
+
+        writer = csv.writer(response)
+        writer.writerow(['Ингредиент', 'Единица измерения', 'Количество'])
+        for product in full_list:
+            writer.writerow(product)
+        return response
+
+
     def alt_endpoint_create(self, request, pk):
-        verdict, product, user = self.product_validate(request, pk)
-        print(verdict, product, user)
+        verdict, product, user = self.product_validate(request, pk)        
         if not verdict:
             return product
 
-        data = {'user': user.id,'product': product.id, }        
+        data = {'user': user.id,'product': product.id }        
         serializer = self.get_serializer(data=data,
                                          context={'request': request})
         serializer.is_valid(raise_exception=True)
@@ -58,11 +88,12 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def product_validate(self, request, pk, delete=False,
                         cart=False):
+        
         user = request.user
         if not Product.objects.filter(id=pk).exists():
             return False, Response({'error': 'Такого продукта еще нет'},
                                    status=status.HTTP_400_BAD_REQUEST), None
-        product = get_object_or_404(Product, id=pk)
+        product = get_object_or_404(Product, id=pk)        
         
         if delete:
             model_answer = {                
@@ -97,7 +128,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return self.alt_endpoint_delete(request, pk, cart=True)
 
     
-
     def alt_endpoint_create(self, request, pk):
         verdict, recipe, user = self.recipe_validate(request, pk)
         if not verdict:

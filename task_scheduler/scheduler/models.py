@@ -72,7 +72,7 @@ class Purchase(models.Model):
     )
 
     class Meta:
-        ordering = ('-date_added',)
+        #ordering = ('-date_added',)
         verbose_name = 'покупку'
         verbose_name_plural = 'покупки'
         constraints = [
@@ -93,32 +93,31 @@ class ProductPurchase(models.Model):
         verbose_name='Продукт')
     date_added = models.DateTimeField(
         auto_now_add=True, verbose_name='Дата добавления')
-    amount = models.PositiveIntegerField(
+    amount = models.PositiveIntegerField(default=1,
         validators=[MinValueValidator(1, message='Не менее 1')],
-        verbose_name='Количество продукта'
-    )
+        verbose_name='Количество продукта'    )   
 
     class Meta:
-        ordering = ('-date_added',)
+        #ordering = ('-date_added',)
         verbose_name = 'покупку продуктов'
         verbose_name_plural = 'покупки продуктов'
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'product'], name='purchase_user_product_unique'
-            )
-        ]
+            )        ]
 
     def __str__(self):
         return f'Продукт "{self.product}" в списке покупок {self.user}'
 
+
 class ProductRecipe(models.Model):
     product = models.ForeignKey(Product,
                                    on_delete=models.CASCADE,
-                                   related_name='ingr_amount',
+                                   related_name='amount',
                                    verbose_name='Ингредиент')
     recipe = models.ForeignKey(Recipe,
                                on_delete=models.CASCADE,
-                               related_name='ingr_amount',
+                               related_name='amount',
                                verbose_name='Рецепт')
     amount = models.PositiveIntegerField(
         validators=[MinValueValidator(1, message='Не менее 1')],
