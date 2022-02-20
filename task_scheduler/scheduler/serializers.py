@@ -1,3 +1,4 @@
+from itertools import product
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from django.db import transaction
@@ -21,7 +22,8 @@ class ShopSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    shop = serializers.StringRelatedField()
+    shop = serializers.StringRelatedField() 
+    
     class Meta:
         fields = '__all__'
         model = Product
@@ -179,14 +181,14 @@ class RecipeSerializer(serializers.ModelSerializer):
 class PurchaseSerializer(serializers.ModelSerializer):
     recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-
+    
     class Meta:
         model = Purchase
         fields = ('user', 'recipe')
 
     def validate(self, data):
         request = self.context.get('request')
-        recipe_id = data['recipe'].id
+        recipe_id = data['recipe'].id        
         if self.Meta.model is Purchase:          
             answer = 'списке покупок'
         if (
@@ -195,7 +197,7 @@ class PurchaseSerializer(serializers.ModelSerializer):
             .filter(user=request.user, recipe__id=recipe_id)
             .exists()
         ):
-            raise serializers.ValidationError(f'Рецепт уже есть в {answer}')
+            raise serializers.ValidationError(f'Рецепт уже есть в {answer}')        
         return data
 
     def to_representation(self, instance):
@@ -204,17 +206,33 @@ class PurchaseSerializer(serializers.ModelSerializer):
         return RecipeShortSerializer(instance.recipe, context=context).data
 
 
-# class ProductPurchaseSerializer(serializers.ModelSerializer):    
-#     product = serializers.SerializerMethodField()
-    
-#     def get_product(self, obj):
-#         return ProductSerializer(
-#             Product.objects.filter(name=obj).all(), many=True
-#         ).data
+class ProductPurchaseSerializer(serializers.ModelSerializer):    
+    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
-#     class Meta:
-#         fields = '__all__'
-#         model = ProductPurchase
+    class Meta:
+        model = ProductPurchase
+        fields = ('user', 'product')
+
+    def validate(self, data):
+        request = self.context.get('request')              
+        product_id = data['product'].id
+        print(product_id)
+        if self.Meta.model is ProductPurchase:          
+            answer = 'списке покупок'
+        if (
+            self.Meta.model.objects
+            .select_related('product')
+            .filter(user=request.user, product__id=product_id)
+            .exists()
+        ):
+            raise serializers.ValidationError(f'Продукт уже есть в {answer}')
+        return data
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        context = {'request': request}
+        return RecipeShortSerializer(instance.product, context=context).data
 
 
 

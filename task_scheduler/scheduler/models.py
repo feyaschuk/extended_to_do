@@ -28,7 +28,6 @@ class Product(models.Model):
     text = models.TextField(verbose_name="Описание продукта")
     category = models.CharField(max_length=200, choices=Category.choices, default=0, verbose_name="Категория продукта")
     adding_date = models.DateField(verbose_name="Дата добавления", auto_now_add=True, db_index=True)
-    #shop = models.ManyToManyField(Shop, through="Shop")
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE, verbose_name="Магазин", related_name="products")
     
     def __str__(self):
@@ -85,6 +84,32 @@ class Purchase(models.Model):
     def __str__(self):
         return f'Рецепт "{self.recipe}" в списке покупок {self.user}'
 
+class ProductPurchase(models.Model):
+    user = models.ForeignKey(User,
+        on_delete=models.CASCADE, related_name='product_purchases',
+        verbose_name='Покупатель')
+    product = models.ForeignKey(Product,
+        on_delete=models.CASCADE, related_name='product_purchases',
+        verbose_name='Продукт')
+    date_added = models.DateTimeField(
+        auto_now_add=True, verbose_name='Дата добавления')
+    amount = models.PositiveIntegerField(
+        validators=[MinValueValidator(1, message='Не менее 1')],
+        verbose_name='Количество продукта'
+    )
+
+    class Meta:
+        ordering = ('-date_added',)
+        verbose_name = 'покупку продуктов'
+        verbose_name_plural = 'покупки продуктов'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'product'], name='purchase_user_product_unique'
+            )
+        ]
+
+    def __str__(self):
+        return f'Продукт "{self.product}" в списке покупок {self.user}'
 
 class ProductRecipe(models.Model):
     product = models.ForeignKey(Product,
