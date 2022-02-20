@@ -9,6 +9,9 @@ localhost/api/users/ ---- POST создание пользователя и т.�
 ```
 localhost/api/auth/jwt/create/ ------ POST создание токена и т.д. по типичным урлам JWT
 ```
+### Тестовая дата ( из директории task_scheduler)
+python manage.py load data db.json
+
 ```
 http://127.0.0.1:8000/api/products/ ------ [GET, POST]
 ```
