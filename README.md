@@ -9,29 +9,27 @@ localhost/api/users/ ---- POST создание пользователя и т.�
 ```
 localhost/api/auth/jwt/create/ ------ POST создание токена и т.д. по типичным урлам JWT
 ```
-
-[GET, POST]
-http://127.0.0.1:8000/api/products/
-
-[GET, PATCH, DELETE]
-http://127.0.0.1:8000/api/products/<id>/
-
-[GET, POST]
-http://127.0.0.1:8000/api/shops/
-
-[GET, PATCH, DELETE]
-http://127.0.0.1:8000/api/shops/<id>/
-
-[GET, POST]
-http://127.0.0.1:8000/api/recipes/
-
-[GET, PATCH, PUT, DELETE]
-http://127.0.0.1:8000/api/recipes/<id>/
-
-добавление и удаление в шоппинг лист - рецепт и продукт
-[GET, DELETE]
-http://127.0.0.1:8000/api/recipes/<id>/shopping_cart/
-
-
-[GET, DELETE]
-http://127.0.0.1:8000/api/products/<id>/shopping_cart/
+```
+http://127.0.0.1:8000/api/products/ ------ [GET, POST]
+```
+```
+http://127.0.0.1:8000/api/products/<id>/ ------ [GET, PATCH, DELETE]
+```
+```
+http://127.0.0.1:8000/api/shops/ ----------- [GET, POST]
+```
+```
+http://127.0.0.1:8000/api/shops/<id>/ ------------- [GET, PATCH, DELETE]
+```
+```
+http://127.0.0.1:8000/api/recipes/ ----------- [GET, POST]
+```
+```
+http://127.0.0.1:8000/api/recipes/<id>/ ----------- [GET, PATCH, PUT, DELETE]
+```
+```
+http://127.0.0.1:8000/api/recipes/<id>/shopping_cart/ ---------- добавление и удаление в шоппинг лист рецепт [GET, DELETE]
+```
+```
+http://127.0.0.1:8000/api/products/<id>/shopping_cart/ ---------- добавление и удаление в шоппинг лист продукт [GET, DELETE]
+```
