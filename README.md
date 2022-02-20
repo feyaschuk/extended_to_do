@@ -28,8 +28,8 @@ http://127.0.0.1:8000/api/recipes/ ----------- [GET, POST]
 http://127.0.0.1:8000/api/recipes/<id>/ ----------- [GET, PATCH, PUT, DELETE]
 ```
 ```
-http://127.0.0.1:8000/api/recipes/<id>/shopping_cart/ ---------- добавление и удаление в шоппинг лист рецепт [GET, DELETE]
+http://127.0.0.1:8000/api/recipes/<id>/shopping_cart/ ---------- добавление, удаление в шоплист рецепт [GET, DELETE], для авториз.пользователя
 ```
 ```
-http://127.0.0.1:8000/api/products/<id>/shopping_cart/ ---------- добавление и удаление в шоппинг лист продукт [GET, DELETE]
+http://127.0.0.1:8000/api/products/<id>/shopping_cart/ ---------- добавление, удаление в шоплист продукт [GET, DELETE], для авториз.пользователя
 ```
