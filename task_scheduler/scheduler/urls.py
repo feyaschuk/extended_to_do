@@ -8,8 +8,6 @@ router_v1.register('shops/?', ShopViewSet, basename='shop')
 router_v1.register('products/?', ProductViewSet, basename='product')
 router_v1.register('recipes/?', RecipeViewSet, basename='recipe')
 
-urlpatterns = [
-    path('auth/', include('djoser.urls.jwt')),
-    path('', include('djoser.urls')),
+urlpatterns = [    
     path('', include(router_v1.urls)),
 ]

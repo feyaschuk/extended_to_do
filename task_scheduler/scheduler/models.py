@@ -4,8 +4,6 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from os.path import join
 from colorfield.fields import ColorField
-
-
 from task_scheduler.settings import MEDIA_ROOT
 from users.models import User
 
@@ -28,8 +26,7 @@ class Product(models.Model):
     text = models.TextField(verbose_name="Описание продукта")
     category = models.CharField(max_length=200, choices=Category.choices, default=0, verbose_name="Категория продукта")
     adding_date = models.DateField(verbose_name="Дата добавления", auto_now_add=True, db_index=True)
-    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, verbose_name="Магазин", related_name="products")
-    
+        
     def __str__(self):
         return "{}, {}".format(self.name, self.measurement_unit)
 
@@ -53,37 +50,6 @@ class Recipe(models.Model):
         return self.name
 
 
-class Purchase(models.Model):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='purchases',
-        verbose_name='Покупатель'
-    )
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        related_name='purchases',
-        verbose_name='Рецепт'
-    )
-    date_added = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='Дата добавления',
-    )
-
-    class Meta:
-        #ordering = ('-date_added',)
-        verbose_name = 'покупку'
-        verbose_name_plural = 'покупки'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'recipe'], name='purchase_user_recipe_unique'
-            )
-        ]
-
-    def __str__(self):
-        return f'Рецепт "{self.recipe}" в списке покупок {self.user}'
-
 class ProductPurchase(models.Model):
     user = models.ForeignKey(User,
         on_delete=models.CASCADE, related_name='product_purchases',
@@ -101,10 +67,7 @@ class ProductPurchase(models.Model):
         #ordering = ('-date_added',)
         verbose_name = 'покупку продуктов'
         verbose_name_plural = 'покупки продуктов'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'product'], name='purchase_user_product_unique'
-            )        ]
+        
 
     def __str__(self):
         return f'Продукт "{self.product}" в списке покупок {self.user}'
@@ -133,6 +96,22 @@ class ProductRecipe(models.Model):
         ]
     def __str__(self):
         return f'Ингридиент "{self.product}" рецепта "{self.recipe}".'
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE,
+        related_name='favorite_users', verbose_name='Пользователь')
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE,
+        related_name='favorite_recipes', verbose_name='Любимый рецепт')
+
+    class Meta:
+        verbose_name = 'Любимые рецепты'
+        verbose_name_plural = 'Любимые рецепты'
+
+    def __str__(self):
+        return f'{self.user} любит {self.recipe}'
 
 
 class SchedulerType(models.Model):
