@@ -18,7 +18,7 @@ class ProductSerializer(serializers.ModelSerializer):
     is_in_shopping_cart = serializers.SerializerMethodField()
 
     def get_is_in_shopping_cart(self, obj):
-        return ProductPurchase.objects.filter(product_id=obj.id).exists()
+        return Purchase.objects.filter(product_id=obj.id).exists()
 
     class Meta:
         fields = '__all__'
@@ -67,12 +67,13 @@ class RecipeSerializer(serializers.ModelSerializer):
         return Favorite.objects.filter(recipe_id=obj.id).exists()
  
 
-class ProductPurchaseSerializer(serializers.ModelSerializer):    
+class PurchaseSerializer(serializers.ModelSerializer):    
     product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    amount = serializers.IntegerField()
     
     class Meta:
-        model = ProductPurchase
+        model = Purchase
         fields = ('user', 'product', 'amount')
 
 

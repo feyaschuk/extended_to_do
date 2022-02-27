@@ -50,7 +50,7 @@ class Recipe(models.Model):
         return self.name
 
 
-class ProductPurchase(models.Model):
+class Purchase(models.Model):
     user = models.ForeignKey(User,
         on_delete=models.CASCADE, related_name='product_purchases',
         verbose_name='Покупатель')
@@ -59,7 +59,7 @@ class ProductPurchase(models.Model):
         verbose_name='Продукт')
     date_added = models.DateTimeField(
         auto_now_add=True, verbose_name='Дата добавления')
-    amount = models.PositiveIntegerField(default=1,
+    amount = models.PositiveIntegerField(
         validators=[MinValueValidator(1, message='Не менее 1')],
         verbose_name='Количество продукта'    )   
 
@@ -95,7 +95,7 @@ class ProductRecipe(models.Model):
             )
         ]
     def __str__(self):
-        return f'Ингридиент "{self.product}" рецепта "{self.recipe}".'
+        return f'Ингредиент "{self.product}" рецепта "{self.recipe}".'
 
 
 class Favorite(models.Model):

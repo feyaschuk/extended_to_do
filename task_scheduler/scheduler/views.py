@@ -1,7 +1,4 @@
 import csv
-from itertools import product
-from wsgiref import validate
-from django.shortcuts import render
 from rest_framework import viewsets
 from scheduler.models import *
 from .serializers import *
@@ -9,9 +6,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, permissions, status, viewsets
+from rest_framework import status, viewsets
 from django.db.models import Sum, Count
-from django.db.models import F
+
 
 
 class ShopViewSet(viewsets.ModelViewSet):
@@ -25,33 +22,34 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):        
         if self.action == 'shopping_cart':
-            return ProductPurchaseSerializer        
+            return PurchaseSerializer        
         return ProductSerializer
 
     @action(detail=True,
-            methods=['GET', 'DELETE'],
+            methods=['POST', 'DELETE'],
             url_path='shopping_cart',
             url_name='shopping_cart')
             
     def shopping_cart(self, request, pk):
-        if request.method == 'GET':
-            product = Product.objects.get(id=pk)
+        if request.method == 'POST':
+            product = Product.objects.get(id=pk)            
             data = {'user': request.user.id,
-                    'product': product.id, }
-            serializer = ProductPurchaseSerializer(
+                    'product': product.id, 
+                    'amount' : request.data['amount']}            
+            serializer = PurchaseSerializer(
                 data=data, context={'request': request})
-            serializer.is_valid(raise_exception=True)
+            serializer.is_valid(raise_exception=True)            
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         shopping_item = get_object_or_404(
-            ProductPurchase, user=request.user, product__id=pk)
+            Purchase, user=request.user, product__id=pk)
         shopping_item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
     @action(['get'], detail=False)                         
     def download_shopping_cart(self, request):
         products = (
-            ProductPurchase.objects
+            Purchase.objects
             .filter(user=request.user)
             .values_list('product__name', 'product__measurement_unit')
             .annotate(amount=Sum('amount')))
@@ -63,6 +61,10 @@ class ProductViewSet(viewsets.ModelViewSet):
         for product in products:
             writer.writerow(product)
         return response
+
+class PurchaseViewSet(viewsets.ModelViewSet):
+    queryset = Purchase.objects.all()
+    serializer_class = PurchaseSerializer
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -78,7 +80,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             url_path='favorite',
             url_name='favorite')
             
-    def favorite(self, request, pk, favorite=False, cart=False):
+    def favorite(self, request, pk):
         if request.method == 'GET':
             recipe = Recipe.objects.get(id=pk)
             data = {'user': request.user.id,

@@ -7,6 +7,7 @@ router_v1 = DefaultRouter(trailing_slash='optional')
 router_v1.register('shops/?', ShopViewSet, basename='shop')
 router_v1.register('products/?', ProductViewSet, basename='product')
 router_v1.register('recipes/?', RecipeViewSet, basename='recipe')
+router_v1.register('purchases/?', PurchaseViewSet, basename='purchase')
 
 urlpatterns = [    
     path('', include(router_v1.urls)),
