@@ -130,4 +130,3 @@ dmypy.json
 # static and media dirs
 /back_static
 /back_media
-/migrations
